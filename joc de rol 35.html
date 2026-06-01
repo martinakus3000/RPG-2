@@ -1,0 +1,2532 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Martinakus RPG</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --line:#223154;
+      --text:#eaf1ff;
+      --muted:#a9b7d6;
+      --good:#35d07f;
+      --bad:#ff5a7a;
+      --warn:#ffc857;
+      --accent:#7aa7ff;
+      --shadow:0 18px 55px rgba(0,0,0,.40);
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 800px at 20% 0%, #162b55 0%, var(--bg) 45%, #070b14 100%);
+      color:var(--text);
+      overflow-x:hidden;
+    }
+
+    .hidden{ display:none !important; }
+
+    /* START SCREEN */
+    #startOverlay{
+      position:fixed;
+      inset:0;
+      z-index:200000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:
+        radial-gradient(900px 600px at 20% 10%, rgba(122,167,255,.18), transparent 50%),
+        radial-gradient(900px 600px at 80% 90%, rgba(255,80,120,.10), transparent 50%),
+        linear-gradient(180deg, #09111f, #050911);
+    }
+
+    .startBox{
+      width:min(920px, 96vw);
+      border-radius:24px;
+      border:1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      backdrop-filter: blur(12px);
+      box-shadow: 0 24px 80px rgba(0,0,0,.55);
+      padding:20px;
+      text-align:center;
+    }
+
+    .startLogoWrap{
+      display:flex;
+      justify-content:center;
+      margin-bottom:14px;
+    }
+
+    .startLogo{
+      width:min(340px, 82vw);
+      aspect-ratio:1/1;
+      object-fit:cover;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow: 0 18px 50px rgba(0,0,0,.35);
+      background:#111827;
+    }
+
+    .startTitle{
+      font-size: clamp(30px, 6vw, 64px);
+      font-weight:1000;
+      letter-spacing:.4px;
+      margin:8px 0 6px;
+      text-shadow: 0 10px 40px rgba(0,0,0,.45);
+    }
+
+    .startSub{
+      color:var(--muted);
+      font-size: clamp(13px, 2vw, 18px);
+      font-weight:800;
+      margin-bottom:18px;
+    }
+
+    .difficultyGrid{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:14px;
+      margin-top:12px;
+    }
+
+    @media (max-width: 760px){
+      .difficultyGrid{ grid-template-columns: 1fr; }
+    }
+
+    .diffCard{
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      border-radius:18px;
+      padding:18px;
+      text-align:left;
+    }
+
+    .diffTitle{
+      font-size:22px;
+      font-weight:1000;
+      margin-bottom:6px;
+    }
+
+    .diffDesc{
+      color:var(--muted);
+      font-size:13px;
+      font-weight:800;
+      min-height:42px;
+      margin-bottom:12px;
+    }
+
+    .diffBtn{
+      width:100%;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      padding:12px 14px;
+      font-weight:1000;
+      cursor:pointer;
+      color:#fff;
+      background: rgba(255,255,255,.06);
+      transition: transform .06s ease, background .16s ease;
+    }
+    .diffBtn:hover{ background: rgba(255,255,255,.10); }
+    .diffBtn:active{ transform: translateY(1px); }
+
+    .diffBtn.normal{
+      border-color: rgba(122,167,255,.65);
+      background: rgba(122,167,255,.18);
+    }
+
+    .diffBtn.locked{
+      border-color: rgba(255,200,87,.50);
+      background: rgba(255,200,87,.10);
+    }
+
+    #startHint{
+      margin-top:16px;
+      color:#dbe7ff;
+      font-size:14px;
+      font-weight:900;
+      min-height:20px;
+    }
+
+    #dangerOverlay{
+      position:fixed;
+      inset:0;
+      z-index:5;
+      pointer-events:none;
+      background: radial-gradient(1000px 700px at 50% 50%, rgba(255,0,0,.70) 0%, rgba(0,0,0,0) 65%);
+      opacity:0;
+      transition: opacity 160ms ease;
+    }
+
+    /* DEATH */
+    #deathOverlay{
+      position:fixed;
+      inset:0;
+      z-index:99999;
+      display:none;
+      background: rgba(0,0,0,.78);
+      backdrop-filter: blur(2px);
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+    }
+
+    .deathBox{
+      width:min(720px, 95vw);
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(20,20,25,.92), rgba(10,10,14,.92));
+      box-shadow: 0 18px 60px rgba(0,0,0,.65);
+      padding:18px;
+    }
+
+    .deathTitle{
+      font-weight:1000;
+      text-align:center;
+      font-size: clamp(26px, 4vw, 44px);
+      margin: 6px 0 6px;
+    }
+
+    .deathSub{
+      text-align:center;
+      color: rgba(240,240,255,.8);
+      font-weight: 800;
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+
+    .deathStats{
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      border-radius:14px;
+      padding:12px;
+      margin:0 auto 14px;
+      max-width:520px;
+      color:rgba(240,240,255,.9);
+      font-weight:800;
+      font-size:13px;
+    }
+
+    .deathRow{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      padding:6px 0;
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .deathRow:last-child{ border-bottom:0; }
+
+    .deathBtnRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+      margin-top:10px;
+    }
+
+    .deathBtn{
+      min-width:210px;
+      border-radius:12px;
+      padding:12px 14px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      color:#eaf1ff;
+      font-weight:950;
+      cursor:pointer;
+    }
+    .deathBtn.primary{
+      border-color: rgba(122,167,255,.55);
+      background: rgba(122,167,255,.18);
+    }
+    .deathBtn.bad{
+      border-color: rgba(255,90,122,.55);
+      background: rgba(255,90,122,.14);
+    }
+
+    header{
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter: blur(10px);
+      background: rgba(10,14,28,.78);
+      border-bottom:1px solid rgba(34,49,84,.7);
+    }
+
+    .headWrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:12px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:950;
+      letter-spacing:.2px;
+      user-select:none;
+    }
+
+    .brand .logo{
+      width:34px;
+      height:34px;
+      border-radius:12px;
+      background: linear-gradient(180deg, rgba(122,167,255,.25), rgba(255,255,255,.04));
+      border:1px solid rgba(34,49,84,.9);
+      display:grid;
+      place-items:center;
+    }
+
+    #gameTitle{ font-weight:950; }
+    .brand .sub{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+      margin-top:2px;
+    }
+
+    .chips{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid rgba(34,49,84,.9);
+      background: rgba(255,255,255,.03);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:900;
+    }
+    .chip b{ color:var(--text); }
+
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:14px;
+      display:grid;
+      gap:14px;
+      grid-template-columns: 1.1fr .9fr;
+      position:relative;
+      z-index:10;
+    }
+
+    @media (max-width: 920px){
+      .wrap{ grid-template-columns:1fr; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015));
+      border:1px solid rgba(34,49,84,.9);
+      border-radius:16px;
+      box-shadow: var(--shadow);
+      padding:14px;
+    }
+
+    .cardInner{
+      background: rgba(0,0,0,.14);
+      border:1px solid rgba(34,49,84,.65);
+      border-radius:14px;
+      padding:12px;
+    }
+
+    .titleRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+
+    .titleRow h2{
+      margin:0;
+      font-size:16px;
+      font-weight:950;
+      letter-spacing:.2px;
+    }
+
+    .muted{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:700;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .btn{
+      border:1px solid rgba(34,49,84,.9);
+      background: rgba(255,255,255,.03);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      font-weight:950;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .05s ease, background .15s ease;
+    }
+    .btn:hover{ background: rgba(255,255,255,.06); }
+    .btn:active{ transform: translateY(1px); }
+    .btn:disabled{ opacity:.45; cursor:not-allowed; }
+
+    .btn.primary{ border-color: rgba(122,167,255,.6); background: rgba(122,167,255,.14); }
+    .btn.good{ border-color: rgba(53,208,127,.65); background: rgba(53,208,127,.12); }
+    .btn.warn{ border-color: rgba(255,200,87,.65); background: rgba(255,200,87,.10); }
+    .btn.bad{ border-color: rgba(255,90,122,.65); background: rgba(255,90,122,.10); }
+
+    .statGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    @media (max-width: 520px){
+      .statGrid{ grid-template-columns:1fr; }
+    }
+
+    .stat{
+      background: rgba(0,0,0,.14);
+      border:1px solid rgba(34,49,84,.65);
+      border-radius:14px;
+      padding:10px;
+    }
+
+    .stat .line{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      font-weight:950;
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+
+    .bar{
+      height:14px;
+      border-radius:999px;
+      border:1px solid rgba(34,49,84,.8);
+      overflow:hidden;
+      background: rgba(255,255,255,.03);
+    }
+
+    .fill{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, var(--accent), rgba(122,167,255,.25));
+    }
+    .fill.good{ background: linear-gradient(90deg, var(--good), rgba(53,208,127,.25)); }
+    .fill.bad{ background: linear-gradient(90deg, var(--bad), rgba(255,90,122,.25)); }
+    .fill.warn{ background: linear-gradient(90deg, var(--warn), rgba(255,200,87,.25)); }
+
+    .tabs{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .tab{
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(34,49,84,.9);
+      background: rgba(0,0,0,.14);
+      color:var(--muted);
+      font-weight:950;
+      cursor:pointer;
+      user-select:none;
+    }
+
+    .tab.active{
+      color:var(--text);
+      border-color: rgba(122,167,255,.6);
+      background: rgba(122,167,255,.14);
+    }
+
+    .view{ display:none; margin-top:12px; }
+    .view.active{ display:block; }
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+
+    @media (max-width:650px){
+      .grid2{ grid-template-columns:1fr; }
+    }
+
+    .item{
+      border:1px solid rgba(34,49,84,.75);
+      background: rgba(0,0,0,.14);
+      border-radius:14px;
+      padding:10px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:flex-start;
+    }
+
+    .item b{ font-weight:950; }
+
+    .desc{
+      margin-top:4px;
+      font-size:12px;
+      color:var(--muted);
+      font-weight:700;
+    }
+
+    .actions{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      align-items:flex-end;
+    }
+
+    .price{
+      font-weight:950;
+      color: var(--warn);
+      white-space:nowrap;
+      font-size:12px;
+    }
+
+    #log{
+      white-space:pre-line;
+      border:1px dashed rgba(34,49,84,.75);
+      border-radius:14px;
+      padding:12px;
+      min-height:90px;
+      background: rgba(0,0,0,.14);
+      font-weight:900;
+      color: var(--text);
+      display:flex;
+      align-items:center;
+    }
+
+    .divider{
+      height:1px;
+      background: rgba(34,49,84,.7);
+      margin:12px 0;
+    }
+
+    .miniLine{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      padding:7px 0;
+      border-bottom:1px solid rgba(34,49,84,.5);
+    }
+
+    .miniLine:last-child{ border-bottom:0; }
+    .miniLine .k{ font-weight:950; }
+    .miniLine .v{ color:var(--muted); font-weight:850; text-align:right; }
+
+    /* DEV */
+    #devOverlay{
+      position:fixed;
+      inset:0;
+      display:none;
+      z-index:9999;
+      background: rgba(0,0,0,.60);
+      backdrop-filter: blur(6px);
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+    }
+
+    .devBox{
+      width:min(620px, 95vw);
+      background: rgba(15,22,40,.95);
+      border:1px solid rgba(34,49,84,.9);
+      border-radius:16px;
+      box-shadow: 0 18px 55px rgba(0,0,0,.55);
+      padding:14px;
+    }
+
+    .devBtn{
+      border:1px solid rgba(34,49,84,.9);
+      background: rgba(255,255,255,.05);
+      color:#eaf1ff;
+      padding:10px 12px;
+      border-radius:14px;
+      font-weight:950;
+      cursor:pointer;
+    }
+
+    .devSelect{
+      width:100%;
+      border:1px solid rgba(34,49,84,.9);
+      background: rgba(255,255,255,.05);
+      color:#eaf1ff;
+      padding:10px 12px;
+      border-radius:14px;
+      font-weight:900;
+      outline:none;
+    }
+
+    .devLabel{
+      font-size:12px;
+      color:#a9b7d6;
+      font-weight:800;
+      margin:10px 0 8px;
+    }
+
+    .devGrid2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    @media (max-width:560px){
+      .devGrid2{ grid-template-columns:1fr; }
+    }
+
+    .devHint{
+      font-size:12px;
+      color:#a9b7d6;
+      font-weight:800;
+      margin-top:10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- START SCREEN -->
+  <div id="startOverlay">
+    <div class="startBox">
+      <div class="startLogoWrap">
+        <!-- ✅ AQUI: el teu fitxer real és "logo web.png" -->
+        <img src="logo%20web.png" alt="Martinakus World" class="startLogo" />
+      </div>
+
+      <div class="startTitle">Martinakus RPG</div>
+      <div class="startSub">Tria dificultat per començar l’aventura 😈⚔️</div>
+
+      <div class="difficultyGrid">
+        <div class="diffCard">
+          <div class="diffTitle">🟢 Fàcil</div>
+          <div class="diffDesc">Ideal per chill, però encara no està llest.</div>
+          <button class="diffBtn locked" id="btnEasy">Pròximament</button>
+        </div>
+
+        <div class="diffCard">
+          <div class="diffTitle">🔵 Normal</div>
+          <div class="diffDesc">La dificultat bona. Aquesta funciona 😎</div>
+          <button class="diffBtn normal" id="btnNormal">Començar partida</button>
+        </div>
+
+        <div class="diffCard">
+          <div class="diffTitle">🔴 Difícil</div>
+          <div class="diffDesc">Per als valents... però encara està cuinant-se 🍳</div>
+          <button class="diffBtn locked" id="btnHard">Pròximament</button>
+        </div>
+      </div>
+
+      <div id="startHint">Només la dificultat <b>Normal</b> està disponible de moment.</div>
+    </div>
+  </div>
+
+  <div id="dangerOverlay"></div>
+
+  <!-- DEATH -->
+  <div id="deathOverlay" role="dialog" aria-modal="true">
+    <div class="deathBox">
+      <div class="deathTitle">HAS MORT</div>
+      <div class="deathSub">No és el final… però fa mal 😵</div>
+
+      <div class="deathStats">
+        <div class="deathRow"><span>Lloc</span><span id="deathPlace">—</span></div>
+        <div class="deathRow"><span>Nivell</span><span id="deathLvl">—</span></div>
+        <div class="deathRow"><span>Or</span><span id="deathGold">—</span></div>
+        <div class="deathRow"><span>Penalització</span><span id="deathPenalty">—</span></div>
+      </div>
+
+      <div class="deathBtnRow">
+        <button class="deathBtn primary" id="deathRespawn">Reaparèixer</button>
+        <button class="deathBtn bad" id="deathQuit">Sortir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME APP -->
+  <div id="gameApp" class="hidden">
+    <header>
+      <div class="headWrap">
+        <div class="brand" id="brandTapArea">
+          <div class="logo">⚔️</div>
+          <div>
+            <div id="gameTitle">Martinakus RPG</div>
+            <div class="sub">Bosc · Tenda (rotació) · Educació · Treballs · Final Boss</div>
+          </div>
+        </div>
+
+        <div class="chips">
+          <div class="chip">📍 <b id="placeChip">Cabaneta</b></div>
+          <div class="chip">⭐ <b id="lvlChip">1</b></div>
+          <div class="chip">❤️ <b id="hpChip">100/100</b></div>
+          <div class="chip">🧠 <b id="kChip">0/500</b></div>
+          <div class="chip">🪙 <b id="goldChip">0</b></div>
+          <div class="chip">🏠 <b id="houseChip">Cap</b></div>
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <!-- LEFT -->
+      <div class="card">
+        <div class="titleRow">
+          <h2>🗺️ Navegació</h2>
+          <div class="muted">Spawn et porta a Cabana/Casa segons el que tens</div>
+        </div>
+
+        <div class="row">
+          <button class="btn primary" id="goSpawn">🛖/🏠 Spawn</button>
+          <button class="btn primary" id="goTown">🏙️ Ciutat</button>
+          <button class="btn primary" id="goForest">🌲 Bosc</button>
+          <button class="btn primary" id="goShop">🏪 Tenda</button>
+          <button class="btn primary" id="goHouses">🏠 Cases</button>
+          <button class="btn primary" id="goPets">🐾 Mascotes</button>
+          <button class="btn primary" id="goEdu">🎓 Educació</button>
+          <button class="btn primary" id="goJobs">💼 Treballs</button>
+          <button class="btn bad" id="goBoss">🔥 Final Boss</button>
+
+          <button class="btn" id="saveLocal">💾 Guardar</button>
+          <button class="btn" id="loadLocal">📂 Carregar</button>
+          <button class="btn bad" id="reset">🔄 Reiniciar</button>
+        </div>
+
+        <div class="statGrid">
+          <div class="stat">
+            <div class="line"><span>❤️ Vida</span><span id="hpTxt">100/100</span></div>
+            <div class="bar"><div class="fill good" id="hpFill"></div></div>
+          </div>
+
+          <div class="stat">
+            <div class="line"><span>🧠 Coneixement</span><span id="kTxt">0/500</span></div>
+            <div class="bar"><div class="fill" id="kFill"></div></div>
+          </div>
+
+          <div class="stat">
+            <div class="line"><span>⚔️ Atac</span><span id="atkTxt">8–12</span></div>
+            <div class="bar"><div class="fill" id="atkFill" style="width:40%"></div></div>
+          </div>
+
+          <div class="stat">
+            <div class="line"><span>🛡️ Defensa</span><span id="defTxt">0</span></div>
+            <div class="bar"><div class="fill" id="defFill" style="width:0%"></div></div>
+          </div>
+
+          <div class="stat">
+            <div class="line"><span>🪙 Or</span><span id="goldTxt">0</span></div>
+            <div class="bar"><div class="fill warn" id="goldFill" style="width:0%"></div></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="titleRow">
+          <h2 id="spawnTitle">🛖 Cabaneta (Spawn)</h2>
+          <div class="muted" id="workInfo">Treball: —</div>
+        </div>
+
+        <div class="cardInner">
+          <div class="muted">Descansar i Treballar al teu spawn.</div>
+          <div style="height:10px;"></div>
+          <div class="row">
+            <button class="btn good" id="spawnRest">😴 Descansar</button>
+            <button class="btn warn" id="spawnWork">🪙 Treballar</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="titleRow">
+          <h2 id="zoneTitle">🌲 Bosc</h2>
+          <div class="muted" id="mineInfo">⛏️ Mina: llesta</div>
+        </div>
+
+        <div class="cardInner">
+          <div class="stat">
+            <div class="line"><span>Enemic</span><span id="eHpTxt">—</span></div>
+            <div class="bar"><div class="fill bad" id="eHpFill"></div></div>
+            <div class="muted" id="enemyName" style="margin-top:8px;">Cap enemic</div>
+          </div>
+
+          <div style="height:10px;"></div>
+
+          <div class="row">
+            <button class="btn good" id="actExplore">🔎 Explorar</button>
+            <button class="btn warn" id="actMine">⛏️ Minar or</button>
+            <button class="btn" id="actAttack">⚔️ Atacar</button>
+            <button class="btn" id="actGuard">🛡️ Defensar</button>
+            <button class="btn warn" id="actSkill">✨ Habilitat</button>
+            <button class="btn" id="actPotion">🧪 Poció</button>
+            <button class="btn bad" id="actRun">🏃 Fugir</button>
+          </div>
+
+          <div class="muted" style="margin-top:10px;" id="zoneHint">
+            Minar: cooldown 2 min, recompensa ~50+ 🪙
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="titleRow">
+          <h2>📜 Log</h2>
+          <div class="muted">Només l’últim</div>
+        </div>
+        <div id="log">👋 Benvingut!</div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="card">
+        <div class="titleRow">
+          <h2>🎒 Menú</h2>
+          <div class="muted">Compra, estudia i curra 😈</div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab active" data-tab="inventory" id="tab-inventory">🎒 Inventari</div>
+          <div class="tab" data-tab="shop" id="tab-shop">🏪 Tenda</div>
+          <div class="tab" data-tab="houses" id="tab-houses">🏠 Cases</div>
+          <div class="tab" data-tab="pets" id="tab-pets">🐾 Mascotes</div>
+          <div class="tab" data-tab="edu" id="tab-edu">🎓 Educació</div>
+          <div class="tab" data-tab="jobs" id="tab-jobs">💼 Treballs</div>
+        </div>
+
+        <div class="view active" id="inventory">
+          <div class="cardInner">
+            <div class="titleRow"><h2>Equipat</h2><div class="muted">Stats</div></div>
+
+            <div class="miniLine"><div class="k">Armes</div><div class="v"><span id="eqWeapon">Cap</span> · <span id="eqWeaponStats">—</span></div></div>
+            <div class="miniLine"><div class="k">Armadures</div><div class="v"><span id="eqArmor">Cap</span> · <span id="eqArmorStats">—</span></div></div>
+            <div class="miniLine"><div class="k">Mascotes</div><div class="v"><span id="eqPet">Cap</span> · <span id="eqPetStats">—</span></div></div>
+
+            <div class="divider"></div>
+
+            <div class="miniLine"><div class="k">Espais equipament</div><div class="v"><span id="slotInfo">2/10</span></div></div>
+            <div style="height:10px;"></div>
+            <div class="row">
+              <button class="btn warn" id="buyEquipSlot">➕ Comprar espai</button>
+            </div>
+            <div class="muted" id="slotHint" style="margin-top:8px;"></div>
+
+            <div class="divider"></div>
+
+            <div class="titleRow"><h2>🧪 Pocions</h2><div class="muted">Inventari</div></div>
+            <div class="muted" id="potList"></div>
+
+            <div class="divider"></div>
+
+            <div class="titleRow"><h2>📦 Comprat</h2><div class="muted">Llista</div></div>
+            <div class="muted" id="ownedList"></div>
+          </div>
+        </div>
+
+        <div class="view" id="shop">
+          <div class="cardInner">
+            <div class="titleRow">
+              <h2>🏪 Tenda (rotació)</h2>
+              <div class="muted" id="shopRotateInfo">⏳ Canvi en: —</div>
+            </div>
+            <div class="muted" style="margin-bottom:10px;">Només surten 5 items i roten cada minut 😈</div>
+            <div class="grid2" id="shopGrid"></div>
+          </div>
+        </div>
+
+        <div class="view" id="houses">
+          <div class="cardInner">
+            <div class="titleRow"><h2>🏠 Cases</h2><div class="muted">Cabana → Palau</div></div>
+            <div class="miniLine"><div class="k">Casa actual</div><div class="v" id="houseNow">—</div></div>
+            <div class="miniLine"><div class="k">Beneficis</div><div class="v" id="housePerks">—</div></div>
+            <div class="divider"></div>
+            <div class="muted" id="nextHouseInfo"></div>
+            <div style="height:10px;"></div>
+            <div class="row">
+              <button class="btn good" id="buyHouse">⬆️ Comprar / Millorar</button>
+              <button class="btn warn" id="restHouseMenu">😴 Descansar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="view" id="pets">
+          <div class="cardInner">
+            <div class="titleRow"><h2>🐾 Mascotes</h2><div class="muted">Compra a Ciutat o Tenda</div></div>
+            <div class="grid2" id="petGrid"></div>
+          </div>
+        </div>
+
+        <div class="view" id="edu">
+          <div class="cardInner">
+            <div class="titleRow">
+              <h2>🎓 Educació</h2>
+              <div class="muted">Has d’estar a “Educació” per estudiar</div>
+            </div>
+
+            <div class="miniLine"><div class="k">Nivell actual</div><div class="v" id="eduNow">—</div></div>
+            <div class="miniLine"><div class="k">Següent pas</div><div class="v" id="eduNext">—</div></div>
+            <div class="miniLine"><div class="k">Cooldown</div><div class="v" id="eduCd">—</div></div>
+
+            <div class="divider"></div>
+
+            <div class="row">
+              <button class="btn primary" id="eduEnroll">📚 Entrar i estudiar</button>
+            </div>
+            <div class="muted" style="margin-top:10px;" id="eduHint">—</div>
+          </div>
+        </div>
+
+        <div class="view" id="jobs">
+          <div class="cardInner">
+            <div class="titleRow">
+              <h2>💼 Treballs</h2>
+              <div class="muted">Cada feina demana 🧠 i dona rewards</div>
+            </div>
+
+            <div class="miniLine"><div class="k">Coneixement</div><div class="v" id="jobKInfo">—</div></div>
+            <div class="miniLine"><div class="k">Cooldown</div><div class="v" id="jobCdInfo">—</div></div>
+
+            <div class="divider"></div>
+
+            <div class="grid2" id="jobGrid"></div>
+
+            <div class="muted" style="margin-top:10px;" id="jobHint">Has d’estar a “Treballs” per currar.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEV MENU -->
+  <div id="devOverlay">
+    <div class="devBox">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
+        <div style="font-weight:950;">🧑‍💻 Menú DEV</div>
+        <button class="devBtn" id="devClose">❌ Tancar</button>
+      </div>
+
+      <div class="devLabel">GOD MODE</div>
+      <button class="devBtn" data-act="god" style="width:100%;">🛡️ GOD MODE</button>
+
+      <div class="devLabel">👾 Spawn enemic</div>
+      <div class="devGrid2">
+        <select class="devSelect" id="enemySelect"></select>
+        <button class="devBtn" data-act="spawnEnemyExact">👾 Spawn</button>
+      </div>
+
+      <div class="devLabel">Altres</div>
+      <div class="devGrid2">
+        <button class="devBtn" data-act="heal">❤️ Cura</button>
+        <button class="devBtn" data-act="mineReset">⛏️ Reset mina</button>
+        <button class="devBtn" data-act="workReset">🪙 Reset treball</button>
+        <button class="devBtn" data-act="devReset">🔄 RESET (Nova partida)</button>
+      </div>
+
+      <div class="devHint">Obrir: mantén premut 2s el títol o escriu “dev”.</div>
+    </div>
+  </div>
+
+<script>
+/* =========================
+   MARTINAKUS RPG
+   ========================= */
+const $ = (id)=>document.getElementById(id);
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const rnd = (a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const now = ()=>Date.now();
+
+function logEvent(emoji, text){ $("log").textContent = `${emoji} ${text}`; }
+
+/* ====== FLAGS / LOOP ====== */
+let gameStarted = false;
+let gameEnded = false;
+let uiInterval = null;
+
+/* 🔁 FIX ROTACIÓ TENDA */
+let lastShopWindow = -1;
+
+/* ====== DATA ====== */
+const HOUSES = [
+  {name:"Cap",         icon:"🏚️", price:null,  rest:0,   goldLoss:0.25, potionLoss:1.00, respawnHp:0.60},
+  {name:"Cabana",      icon:"🛖", price:120,   rest:40,  goldLoss:0.22, potionLoss:0.90, respawnHp:0.65},
+  {name:"Cabana gran", icon:"🛖", price:220,   rest:55,  goldLoss:0.20, potionLoss:0.80, respawnHp:0.67},
+  {name:"Casa",        icon:"🏠", price:350,   rest:70,  goldLoss:0.17, potionLoss:0.70, respawnHp:0.70},
+  {name:"Casa gran",   icon:"🏠", price:520,   rest:80,  goldLoss:0.14, potionLoss:0.60, respawnHp:0.72},
+  {name:"Mansió",      icon:"🏰", price:800,   rest:95,  goldLoss:0.11, potionLoss:0.50, respawnHp:0.75},
+  {name:"Palau",       icon:"👑", price:1200,  rest:120, goldLoss:0.08, potionLoss:0.35, respawnHp:0.80},
+];
+
+const PETS = [
+  { id:"p_cat",     name:"Gat valent",               price:60,  icon:"🐱", desc:"10% esquivar", bonus:{dodge:0.10} },
+  { id:"p_dog",     name:"Gos protector",            price:75,  icon:"🐶", desc:"+1 defensa fixa", bonus:{def:1} },
+  { id:"p_owl",     name:"Mussol savi",              price:160, icon:"🦉", desc:"+6% crític i +8% esquiva", bonus:{crit:0.06, dodge:0.08} },
+  { id:"p_cobra",   name:"Cobra verinosa",           price:260, icon:"🐍", desc:"+15% dany i +6% crític", bonus:{dmg:0.15, crit:0.06} },
+  { id:"p_krypto",  name:"Krypto (gos de Superman)", price:380, icon:"🐶🦸", desc:"+22% dany, +10% crític, +12% esquiva i +25 vida max", bonus:{dmg:0.22, crit:0.10, dodge:0.12, hpMax:25} },
+  { id:"p_alien",   name:"Àlien suprem",             price:420, icon:"👽", desc:"+25% dany, +12% crític, +15% esquiva i +35 vida max", bonus:{dmg:0.25, crit:0.12, dodge:0.15, hpMax:35} },
+];
+
+const ENEMIES = [
+  { name:"Slime",      hp:50,  dmg:[6,9],   gold:[10,16] },
+  { name:"Esquelet",   hp:65,  dmg:[7,11],  gold:[12,20] },
+  { name:"Bandit",     hp:75,  dmg:[8,12],  gold:[14,24] },
+  { name:"Robot boig", hp:90,  dmg:[10,14], gold:[18,30] },
+  { name:"Drac mini",  hp:110, dmg:[12,16], gold:[22,36] },
+];
+
+const BOSS_ENEMIES = [
+  { name:"👹 TITÀ ABISMAL",       hp: 1100, dmg:[45,75],  gold:[1200,1900], multiHit: true  },
+  { name:"☠️ REI ESQUELET PRO",  hp:  900, dmg:[42,70],  gold:[ 900,1500], multiHit: true  },
+  { name:"🐉 DRAC ANCIÀ",        hp: 1250, dmg:[50,85],  gold:[1300,2100], multiHit: true  },
+  { name:"🤖 MEGA-ROBOT X",      hp: 1000, dmg:[45,78],  gold:[ 950,1600], multiHit: false },
+  { name:"👁️ SENYOR DELS ULLS", hp: 1400, dmg:[52,90],  gold:[1500,2400], multiHit: true  },
+];
+
+/* 🎓 EDU */
+const EDU_STEPS = [
+  { id:"escola",    name:"Escola",       price:5,   gain:20 },
+  { id:"institut",  name:"Institut",     price:50,  gain:60 },
+  { id:"uni",       name:"Universitat",  price:100, gain:120 },
+  { id:"carrera",   name:"Carrera",      price:125, gain:180 },
+  { id:"master",    name:"Màster",       price:150, gain:250 },
+];
+const EDU_CD_MS = 5 * 60 * 1000;
+
+/* 💼 JOBS */
+const JOB_CD_MS = 2 * 60 * 1000;
+const JOBS = [
+  { id:"j1",  name:"Repartidor de flyers", reqK: 0,   icon:"📄", desc:"Feina fàcil per començar.", reward:{ gold:[4,8] } },
+  { id:"j2",  name:"Cambrer",              reqK: 20,  icon:"☕", desc:"Propines petites.",         reward:{ gold:[8,15] } },
+  { id:"j3",  name:"Caixer",               reqK: 50,  icon:"🧾", desc:"Més estable.",             reward:{ gold:[14,24] } },
+  { id:"j4",  name:"Monitor de gimnàs",    reqK: 80,  icon:"🏋️", desc:"Més dur, més paga.",       reward:{ gold:[18,32] } },
+  { id:"j5",  name:"Programador Junior",   reqK: 120, icon:"💻", desc:"Codi i cafè.",             reward:{ gold:[25,45], potM:[0,1] } },
+  { id:"j6",  name:"Tècnic informàtic",    reqK: 160, icon:"🧰", desc:"Arreglar PCs a saco.",      reward:{ gold:[35,60], potS:[0,2] } },
+  { id:"j7",  name:"Professor particular", reqK: 200, icon:"📚", desc:"Classes i pasta.",         reward:{ gold:[50,85], potS:[0,1], potM:[0,1] } },
+  { id:"j8",  name:"Enginyer",             reqK: 260, icon:"🧱", desc:"Projectes seriosos.",       reward:{ gold:[70,120], potM:[0,1] } },
+  { id:"j9",  name:"Metge",                reqK: 320, icon:"🩺", desc:"Feina top, difícil.",       reward:{ gold:[90,160], potM:[1,2] } },
+  { id:"j10", name:"Advocat",              reqK: 360, icon:"⚖️", desc:"Casos importants.",        reward:{ gold:[110,190], potB:[0,1] } },
+  { id:"j11", name:"Data Scientist",       reqK: 420, icon:"📊", desc:"Números i models.",         reward:{ gold:[140,240], potM:[1,2], potB:[0,1] } },
+  { id:"j12", name:"CEO (mode cap)",       reqK: 480, icon:"👑", desc:"Màxima paga.",              reward:{ gold:[180,320], potB:[1,2] } },
+];
+
+/* 🏪 SHOP ROTATIVA */
+const SHOP_ROTATE_MS = 60 * 1000;
+const SHOP_SHOW = 5;
+let SHOP_ALL = [];
+
+function shopWindowIndex(ts = now()){ return Math.floor(ts / SHOP_ROTATE_MS); }
+function shopNextRotationLeft(){
+  const ts = now();
+  const next = (shopWindowIndex(ts) + 1) * SHOP_ROTATE_MS;
+  return Math.max(0, next - ts);
+}
+function mulberry32(seed){
+  return function(){
+    let t = seed += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function getActiveShopItems(){
+  const w = shopWindowIndex();
+  const rng = mulberry32(0xBEEFCAFE ^ w);
+  const idxs = new Set();
+  while(idxs.size < Math.min(SHOP_SHOW, SHOP_ALL.length)){
+    idxs.add(Math.floor(rng() * SHOP_ALL.length));
+  }
+  return [...idxs].map(i=>SHOP_ALL[i]);
+}
+
+/* Generador ~100 items */
+function makeShopCatalog(){
+  const items = [];
+
+  // pocions base
+  const potions = [
+    { id:"pot_s",  type:"potion", name:"Poció petita",  price:12,  icon:"🧪", heal:20,  desc:"+20 vida" },
+    { id:"pot_m",  type:"potion", name:"Poció mitjana", price:25,  icon:"🧪", heal:40,  desc:"+40 vida" },
+    { id:"pot_b",  type:"potion", name:"Poció gran",    price:45,  icon:"🧪", heal:70,  desc:"+70 vida" },
+    { id:"pot_xl", type:"potion", name:"Poció XL",      price:80,  icon:"🧪", heal:120, desc:"+120 vida" },
+    { id:"pot_ul", type:"potion", name:"Elixir Ultra",  price:140, icon:"🧪", heal:200, desc:"+200 vida" },
+  ];
+  items.push(...potions);
+
+  // armes (40)
+  const weaponNouns = ["Espasa","Daga","Martell","Destral","Llança","Katana","Massa","Bastó","Guadaña","Sable"];
+  const weaponAdjs  = ["de Fusta","de Ferro","d'Acer","de Gel","de Foc","del Llamp","Obscura","Sagrada","del Caos","Antiga"];
+  const weaponIcons = ["🗡️","🗡️","🔨","🪓","🔱","🗡️","🔨","🪄","🗡️","🗡️"];
+  let wid = 1;
+  for(let tier=1; tier<=4; tier++){
+    for(let i=0;i<10;i++){
+      const noun = weaponNouns[i%weaponNouns.length];
+      const adj  = weaponAdjs[(i + tier*2)%weaponAdjs.length];
+      const icon = weaponIcons[i%weaponIcons.length];
+      const minAdd = tier + Math.floor(i/4);
+      const maxAdd = (tier*2) + Math.floor(i/2) + 2;
+      const crit = (tier>=3 && (i%3===0)) ? 0.04 : (tier===4 && (i%2===0) ? 0.06 : 0);
+      const price = 25 + tier*55 + i*6;
+      items.push({
+        id:`w_${String(wid++).padStart(3,"0")}`,
+        type:"weapon",
+        name:`${noun} ${adj}`,
+        price, icon,
+        desc:`+${minAdd} min +${maxAdd} max${crit?` · +${Math.round(crit*100)}% crític`:""}`,
+        stats:{ min:minAdd, max:maxAdd, ...(crit?{crit}:{}) }
+      });
+    }
+  }
+
+  // armadures (40)
+  const armorNouns = ["Armadura","Cuirassa","Túnica","Escut","Casc","Peto","Roba","Placa","Vestit","Capa"];
+  const armorAdjs  = ["de Cuir","de Ferro","d'Acer","de Gel","de Foc","del Llamp","Obscura","Sagrada","del Drac","Antiga"];
+  const armorIcons = ["🛡️","🛡️","🧥","🛡️","🪖","🦺","🧥","🛡️","🧥","🧥"];
+  let aid = 1;
+  for(let tier=1; tier<=4; tier++){
+    for(let i=0;i<10;i++){
+      const noun = armorNouns[i%armorNouns.length];
+      const adj  = armorAdjs[(i + tier*3)%armorAdjs.length];
+      const icon = armorIcons[i%armorIcons.length];
+      const defAdd = tier*2 + Math.floor(i/3);
+      const hpAdd  = (tier>=2 && i%4===0) ? 6 + tier*3 : (tier===4 && i%3===0 ? 18 : 0);
+      const price = 20 + tier*60 + i*7;
+      items.push({
+        id:`a_${String(aid++).padStart(3,"0")}`,
+        type:"armor",
+        name:`${noun} ${adj}`,
+        price, icon,
+        desc:`+${defAdd} defensa${hpAdd?` · +${hpAdd} vida max`:""}`,
+        stats:{ def:defAdd, ...(hpAdd?{hpMax:hpAdd}:{}) }
+      });
+    }
+  }
+
+  // 15 extra potions
+  const extraNames = [
+    "Poció Ràpida","Poció Doble","Poció Turbo","Poció Misteriosa","Poció del Bosc",
+    "Poció del Desert","Poció del Nord","Poció del Caos","Poció Llegendària","Poció Pro",
+    "Poció de Cristall","Poció Fosca","Poció Santa","Poció del Drac","Poció Final"
+  ];
+  extraNames.forEach((n,i)=>{
+    const heal = 30 + i*8;
+    const price = 18 + i*10;
+    items.push({ id:`pot_ex_${i+1}`, type:"potion", name:n, price, icon:"🧪", desc:`+${heal} vida`, heal });
+  });
+
+  return items;
+}
+
+/* ====== STATE ====== */
+function DEFAULT_STATE(){
+  return {
+    difficulty: "normal",
+    place: "Cabaneta",
+    lvl: 1,
+    gold: 0,
+    baseMin: 8,
+    baseMax: 12,
+    hpMax: 100,
+    hp: 100,
+
+    knowledge: 0,
+    knowledgeMax: 500,
+
+    hpCapMult: 1.5,
+
+    houseTier: 0,
+
+    potions: { s:2, m:0, b:0, xl:0, ul:0 },
+    owned: { weapons: [], armors: [], pets: [] },
+
+    equipSlots: 2,
+    equipped: { weapons:[], armors:[], pets:[] },
+
+    enemy: null,
+    guardOn: false,
+    skillCd: 0,
+
+    mineCooldownUntil: 0,
+
+    eduLevel: 0,
+    eduStudyingUntil: 0,
+    eduPendingGain: 0,
+
+    jobCooldownUntil: 0,
+  };
+}
+const state = DEFAULT_STATE();
+
+/* ====== HELPERS ====== */
+function msToText(ms){
+  ms = Math.max(0, ms);
+  const s = Math.ceil(ms/1000);
+  const m = Math.floor(s/60);
+  const r = s%60;
+  if(m<=0) return `${r}s`;
+  return `${m}m ${r}s`;
+}
+
+function equipSlots(){
+  const v = Number(state.equipSlots ?? 2);
+  return Math.max(2, Math.min(10, Number.isFinite(v)?Math.floor(v):2));
+}
+function nextEquipSlotCost(){
+  const s = equipSlots();
+  if(s >= 10) return null;
+  const n = s - 2;
+  return Math.max(1, Math.floor(200 * Math.pow(1.25, n)));
+}
+
+function getWeapons(){
+  const ids = Array.isArray(state.equipped?.weapons) ? state.equipped.weapons : [];
+  return ids.map(id=>SHOP_ALL.find(x=>x.id===id)).filter(Boolean);
+}
+function getArmors(){
+  const ids = Array.isArray(state.equipped?.armors) ? state.equipped.armors : [];
+  return ids.map(id=>SHOP_ALL.find(x=>x.id===id)).filter(Boolean);
+}
+function getPets(){
+  const ids = Array.isArray(state.equipped?.pets) ? state.equipped.pets : [];
+  return ids.map(id=>PETS.find(x=>x.id===id)).filter(Boolean);
+}
+
+function calcHpMax(){
+  let m = 100 + (state.lvl-1)*6;
+  for(const a of getArmors()) if(a?.stats?.hpMax) m += a.stats.hpMax;
+  for(const p of getPets()) if(p?.bonus?.hpMax) m += p.bonus.hpMax;
+  return m;
+}
+function calcHpCap(){
+  const mult = Number(state.hpCapMult || 1);
+  return Math.max(1, Math.floor(state.hpMax * (Number.isFinite(mult)?mult:1)));
+}
+function calcDef(){
+  let d = 0;
+  for(const a of getArmors()) if(a?.stats?.def) d += a.stats.def;
+  for(const p of getPets()) if(p?.bonus?.def) d += p.bonus.def;
+  return d;
+}
+function calcAtk(){
+  let min = state.baseMin + (state.lvl-1);
+  let max = state.baseMax + (state.lvl-1);
+  for(const w of getWeapons()){
+    if(w?.stats){
+      min += (w.stats.min||0);
+      max += (w.stats.max||0);
+    }
+  }
+  return {min,max};
+}
+function critChance(){
+  let c = 0.18;
+  for(const w of getWeapons()) if(w?.stats?.crit) c += w.stats.crit;
+  for(const p of getPets()) if(p?.bonus?.crit) c += p.bonus.crit;
+  return c;
+}
+function dodgeChance(){
+  let d = 0;
+  for(const p of getPets()) if(p?.bonus?.dodge) d += p.bonus.dodge;
+  if(state.place === "Final Boss") d *= 0.85;
+  return Math.max(0, Math.min(0.60, d));
+}
+function dmgMult(){
+  let m = 1;
+  for(const p of getPets()) if(p?.bonus?.dmg) m *= (1 + p.bonus.dmg);
+  if(state.place === "Final Boss") m *= 0.98;
+  return m;
+}
+function totalPotions(){
+  return (state.potions.s||0)+(state.potions.m||0)+(state.potions.b||0)+(state.potions.xl||0)+(state.potions.ul||0);
+}
+function enemyAlive(){ return !!(state.enemy && state.enemy.hp > 0); }
+function spawnPlace(){ return (state.houseTier >= 1) ? "Casa" : "Cabaneta"; }
+
+/* ====== EDUCATION ====== */
+function eduCompletedCount(){
+  const v = Number(state.eduLevel ?? 0);
+  return Math.max(0, Math.min(EDU_STEPS.length, Number.isFinite(v)?Math.floor(v):0));
+}
+function eduCurrentName(){
+  const done = eduCompletedCount();
+  if(done <= 0) return "Cap (0/5)";
+  return `${EDU_STEPS[done-1].name} (${done}/5)`;
+}
+function eduNextStep(){
+  const done = eduCompletedCount();
+  if(done >= EDU_STEPS.length) return null;
+  return EDU_STEPS[done];
+}
+function eduCdLeft(){ return Math.max(0, (state.eduStudyingUntil||0) - now()); }
+function tryFinishEducation(){
+  if(state.eduStudyingUntil && now() >= state.eduStudyingUntil && state.eduPendingGain > 0){
+    const gain = state.eduPendingGain;
+    state.eduPendingGain = 0;
+    state.eduStudyingUntil = 0;
+
+    const max = Number(state.knowledgeMax||500);
+    state.knowledge = clamp((state.knowledge||0) + gain, 0, max);
+
+    state.eduLevel = eduCompletedCount() + 1;
+    logEvent("🧠", `Has acabat d’estudiar i guanyes +${gain} coneixement!`);
+  }
+}
+
+/* ====== JOBS ====== */
+function jobCdLeft(){ return Math.max(0, (state.jobCooldownUntil||0) - now()); }
+function canDoJob(job){ return Number(state.knowledge||0) >= job.reqK; }
+function applyJobReward(job){
+  const g = rnd(job.reward.gold[0], job.reward.gold[1]);
+  state.gold += g;
+
+  let addS=0, addM=0, addB=0;
+  if(job.reward.potS) addS = rnd(job.reward.potS[0], job.reward.potS[1]);
+  if(job.reward.potM) addM = rnd(job.reward.potM[0], job.reward.potM[1]);
+  if(job.reward.potB) addB = rnd(job.reward.potB[0], job.reward.potB[1]);
+
+  state.potions.s += addS;
+  state.potions.m += addM;
+  state.potions.b += addB;
+
+  const extra = `${addS?` +${addS}🧪S`:""}${addM?` +${addM}🧪M`:""}${addB?` +${addB}🧪B`:""}`.trim();
+  logEvent("💼", `Treballes de ${job.name} i guanyes +${g}🪙${extra?(" ·"+extra):""}!`);
+}
+function doJob(jobId){
+  if(gameEnded) return;
+  if(state.place !== "Treballs"){ logEvent("💼","Has d’estar a Treballs per currar."); return; }
+
+  const left = jobCdLeft();
+  if(left > 0){ logEvent("⏳", `Espera ${msToText(left)}.`); return; }
+
+  const job = JOBS.find(j=>j.id===jobId);
+  if(!job){ logEvent("❌","Feina no existeix 😵"); return; }
+  if(!canDoJob(job)){ logEvent("🚫", `Necessites ${job.reqK}🧠 per ${job.name}.`); return; }
+
+  state.jobCooldownUntil = now() + JOB_CD_MS;
+  applyJobReward(job);
+  render();
+}
+
+/* ====== UI / NAV ====== */
+function openTab(name){
+  if(gameEnded) return;
+
+  if(name === "edu" && state.place !== "Educació") go("Educació");
+  if(name === "jobs" && state.place !== "Treballs") go("Treballs");
+  if(name === "shop" && state.place !== "Tenda") go("Tenda");
+  if(name === "houses" && state.place !== "Cases") go("Cases");
+
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  $("tab-"+name).classList.add("active");
+  $(name).classList.add("active");
+}
+
+/* ====== WORK (SPAWN) ====== */
+const WORK_KEY = "martinakus_work_v1";
+const WORK_WINDOW_MS = 10*60*1000;
+const WORK_COOLDOWN_MS = 60*1000;
+const WORK_MAX = 3;
+
+function loadWork(){
+  try{
+    const raw = localStorage.getItem(WORK_KEY);
+    if(!raw) return { times:[], cooldownUntil:0 };
+    const obj = JSON.parse(raw);
+    return { times:Array.isArray(obj.times)?obj.times:[], cooldownUntil: obj.cooldownUntil||0 };
+  }catch{
+    return { times:[], cooldownUntil:0 };
+  }
+}
+function saveWork(w){ localStorage.setItem(WORK_KEY, JSON.stringify(w)); }
+function cleanWork(w){
+  const limit = now() - WORK_WINDOW_MS;
+  w.times = w.times.filter(t=>t>=limit);
+}
+function workStatus(){
+  const w = loadWork();
+  cleanWork(w);
+  saveWork(w);
+  const used = w.times.length;
+  const inCd = now() < w.cooldownUntil;
+  const cdLeft = Math.max(0, w.cooldownUntil - now());
+  const windowLeft = used ? Math.max(0, (w.times[0] + WORK_WINDOW_MS) - now()) : 0;
+  return { w, used, inCd, cdLeft, windowLeft, ok: (!inCd && used < WORK_MAX) };
+}
+function updateWorkUI(){
+  const s = workStatus();
+  let text = `Treball: ${s.used}/${WORK_MAX}`;
+  if(s.inCd) text += ` · ⏳ ${msToText(s.cdLeft)}`;
+  else if(s.used >= WORK_MAX) text += ` · reset ${msToText(s.windowLeft)}`;
+  $("workInfo").textContent = text;
+
+  const here = (state.place==="Cabaneta" || state.place==="Casa");
+  const btn = $("spawnWork");
+  btn.disabled = !(here && s.ok);
+
+  if(!here) btn.textContent = "🪙 Treballar (ves al spawn)";
+  else if(s.inCd) btn.textContent = `⏳ Cooldown (${msToText(s.cdLeft)})`;
+  else if(s.used >= WORK_MAX) btn.textContent = `🚫 Límit (${msToText(s.windowLeft)})`;
+  else btn.textContent = "🪙 Treballar";
+}
+
+/* ====== MINA ====== */
+const MINE_CD_MS = 2*60*1000;
+function mineLeft(){ return Math.max(0, state.mineCooldownUntil - now()); }
+function updateMineUI(){
+  const btn = $("actMine");
+
+  if(state.place === "Final Boss" || state.place === "Educació" || state.place === "Treballs"){
+    $("mineInfo").textContent =
+      state.place === "Educació" ? "🎓 Mina: estàs estudiant 😅" :
+      state.place === "Treballs" ? "💼 Mina: estàs currant 😅" :
+      "🔥 Mina: aquí no hi ha temps 😈";
+    btn.textContent = "🚫 No pots minar";
+    btn.disabled = true;
+    return;
+  }
+
+  if(state.place !== "Bosc"){
+    $("mineInfo").textContent = "⛏️ Mina: ves al bosc";
+    btn.textContent = "⛏️ Minar or";
+    btn.disabled = true;
+    return;
+  }
+
+  if(enemyAlive()){
+    $("mineInfo").textContent = "⛏️ Mina: tens enemic";
+    btn.textContent = "😵 No pots minar";
+    btn.disabled = true;
+    return;
+  }
+
+  const left = mineLeft();
+  if(left > 0){
+    $("mineInfo").textContent = `⛏️ Cooldown: ${msToText(left)}`;
+    btn.textContent = `⏳ Minar (${msToText(left)})`;
+    btn.disabled = true;
+  }else{
+    $("mineInfo").textContent = "⛏️ Mina: llesta";
+    btn.textContent = "⛏️ Minar or";
+    btn.disabled = false;
+  }
+}
+
+function updateDangerOverlay(){
+  const ratio = state.hpMax ? (state.hp / state.hpMax) : 1;
+  const ov = $("dangerOverlay");
+  if(ratio < 0.20) ov.style.opacity = "0.78";
+  else if(ratio < 0.35) ov.style.opacity = "0.45";
+  else if(ratio < 0.50) ov.style.opacity = "0.20";
+  else ov.style.opacity = "0";
+}
+
+function disableAllControls(){
+  document.querySelectorAll("button, input, textarea, select, .tab").forEach(el=>{
+    if(el.closest("#deathOverlay")) return;
+    if(el.classList.contains("tab")){
+      el.style.pointerEvents = "none";
+      el.style.opacity = "0.45";
+    }else{
+      el.disabled = true;
+    }
+  });
+}
+function enableAllControls(){
+  document.querySelectorAll("button, input, textarea, select, .tab").forEach(el=>{
+    if(el.classList.contains("tab")){
+      el.style.pointerEvents = "";
+      el.style.opacity = "";
+    }else{
+      el.disabled = false;
+    }
+  });
+}
+
+/* ====== NAV ====== */
+function go(place){
+  if(gameEnded) return;
+
+  const prev = state.place;
+  state.place = place;
+
+  if(prev === "Bosc" && place !== "Bosc"){ state.enemy = null; state.guardOn = false; }
+  if(prev === "Final Boss" && place !== "Final Boss"){ state.enemy = null; state.guardOn = false; }
+
+  const emoji =
+    place==="Cabaneta" ? "🛖" :
+    place==="Casa" ? "🏠" :
+    place==="Ciutat" ? "🏙️" :
+    place==="Bosc" ? "🌲" :
+    place==="Tenda" ? "🏪" :
+    place==="Cases" ? "🏠" :
+    place==="Educació" ? "🎓" :
+    place==="Treballs" ? "💼" :
+    place==="Final Boss" ? "🔥" : "🗺️";
+
+  logEvent(emoji, `Vas a: ${place}.`);
+  render();
+}
+
+/* ====== SHOP buy/equip ====== */
+function canBuyShop(){ return state.place === "Tenda"; }
+function isOwned(item){
+  if(item.type==="weapon") return state.owned.weapons.includes(item.id);
+  if(item.type==="armor")  return state.owned.armors.includes(item.id);
+  return true;
+}
+function buyItem(itemId){
+  if(gameEnded) return;
+  if(!canBuyShop()){ logEvent("🚫","Has d’estar a la TENDA per comprar."); return; }
+
+  const item = SHOP_ALL.find(x=>x.id===itemId);
+  if(!item){ logEvent("❌","Aquest item ja no existeix 😵"); return; }
+  if(state.gold < item.price){ logEvent("😅","No tens prou or."); return; }
+
+  state.gold -= item.price;
+
+  if(item.type === "potion"){
+    if(item.id==="pot_s") state.potions.s += 1;
+    else if(item.id==="pot_m") state.potions.m += 1;
+    else if(item.id==="pot_b") state.potions.b += 1;
+    else if(item.id==="pot_xl") state.potions.xl += 1;
+    else if(item.id==="pot_ul") state.potions.ul += 1;
+    else state.potions.s += 1;
+    logEvent("🧪", `Compres ${item.name}.`);
+    render();
+    return;
+  }
+
+  if(item.type === "weapon"){
+    if(!state.owned.weapons.includes(item.id)) state.owned.weapons.push(item.id);
+    state.equipped.weapons = Array.isArray(state.equipped.weapons)?state.equipped.weapons:[];
+    if(state.equipped.weapons.length < equipSlots() && !state.equipped.weapons.includes(item.id)){
+      state.equipped.weapons.push(item.id);
+      logEvent("🗡️", `Compres i equipes ${item.name}.`);
+    }else logEvent("🗡️", `Compres ${item.name}.`);
+    render();
+    return;
+  }
+
+  if(item.type === "armor"){
+    if(!state.owned.armors.includes(item.id)) state.owned.armors.push(item.id);
+    state.equipped.armors = Array.isArray(state.equipped.armors)?state.equipped.armors:[];
+    if(state.equipped.armors.length < equipSlots() && !state.equipped.armors.includes(item.id)){
+      state.equipped.armors.push(item.id);
+      logEvent("🛡️", `Compres i equipes ${item.name}.`);
+    }else logEvent("🛡️", `Compres ${item.name}.`);
+    state.hpMax = calcHpMax();
+    state.hp = clamp(state.hp, 0, calcHpCap());
+    render();
+  }
+}
+function equipItem(itemId){
+  if(gameEnded) return;
+
+  const item = SHOP_ALL.find(x=>x.id===itemId);
+  if(!item){ logEvent("❌","Item desconegut"); return; }
+  const cap = equipSlots();
+
+  if(item.type==="weapon"){
+    if(!state.owned.weapons.includes(item.id)){ logEvent("❌","No tens aquesta arma."); return; }
+    state.equipped.weapons = Array.isArray(state.equipped.weapons)?state.equipped.weapons:[];
+    if(state.equipped.weapons.includes(item.id)){ logEvent("😄","Ja la tens equipada."); return; }
+    if(state.equipped.weapons.length >= cap){ logEvent("🚫",`No tens espai d’armes (cap ${cap}).`); return; }
+    state.equipped.weapons.push(item.id);
+    logEvent("✅", `Equipes arma: ${item.name}.`);
+  }else if(item.type==="armor"){
+    if(!state.owned.armors.includes(item.id)){ logEvent("❌","No tens aquesta armadura."); return; }
+    state.equipped.armors = Array.isArray(state.equipped.armors)?state.equipped.armors:[];
+    if(state.equipped.armors.includes(item.id)){ logEvent("😄","Ja la tens equipada."); return; }
+    if(state.equipped.armors.length >= cap){ logEvent("🚫",`No tens espai d’armadures (cap ${cap}).`); return; }
+    state.equipped.armors.push(item.id);
+    logEvent("✅", `Equipes armadura: ${item.name}.`);
+  }
+
+  state.hpMax = calcHpMax();
+  state.hp = clamp(state.hp, 0, calcHpCap());
+  render();
+}
+
+/* ====== PETS ====== */
+function canBuyPet(){ return state.place==="Ciutat" || state.place==="Tenda"; }
+function buyPet(p){
+  if(gameEnded) return;
+  if(!canBuyPet()){ logEvent("🚫","Compra mascotes a Ciutat o Tenda."); return; }
+  if(state.owned.pets.includes(p.id)){ logEvent("😆","Ja tens aquesta mascota."); return; }
+  if(state.gold < p.price){ logEvent("😅","No tens prou or."); return; }
+
+  state.gold -= p.price;
+  state.owned.pets.push(p.id);
+
+  state.equipped.pets = Array.isArray(state.equipped.pets)?state.equipped.pets:[];
+  if(state.equipped.pets.length < equipSlots() && !state.equipped.pets.includes(p.id)){
+    state.equipped.pets.push(p.id);
+    logEvent("🐾", `Compres i equipes ${p.name}.`);
+  } else logEvent("🐾", `Compres ${p.name}.`);
+
+  state.hpMax = calcHpMax();
+  state.hp = clamp(state.hp, 0, calcHpCap());
+  render();
+}
+function equipPet(p){
+  if(gameEnded) return;
+  const cap = equipSlots();
+  if(!state.owned.pets.includes(p.id)){ logEvent("❌","No tens aquesta mascota."); return; }
+
+  state.equipped.pets = Array.isArray(state.equipped.pets)?state.equipped.pets:[];
+  if(state.equipped.pets.includes(p.id)){ logEvent("😄","Ja la tens equipada."); return; }
+  if(state.equipped.pets.length >= cap){ logEvent("🚫",`No tens espai de mascotes (cap ${cap}).`); return; }
+
+  state.equipped.pets.push(p.id);
+  logEvent("🐾", `Mascota equipada: ${p.name}.`);
+  state.hpMax = calcHpMax();
+  state.hp = clamp(state.hp, 0, calcHpCap());
+  render();
+}
+
+/* ====== HOUSES ====== */
+function hasMaxHouse(){ return state.houseTier >= HOUSES.length-1; }
+
+/* ====== BOSS REWARDS ====== */
+function grantMissingRandomItem(){
+  const pools = [
+    { list: SHOP_ALL.filter(x=>x.type==="weapon"), owned: state.owned.weapons, add: (id)=>state.owned.weapons.push(id) },
+    { list: SHOP_ALL.filter(x=>x.type==="armor"),  owned: state.owned.armors,  add: (id)=>state.owned.armors.push(id)  },
+    { list: PETS,                                  owned: state.owned.pets,    add: (id)=>state.owned.pets.push(id)    },
+  ];
+  const pickPool = pools[rnd(0, pools.length-1)];
+  const missing = pickPool.list.filter(x=>!pickPool.owned.includes(x.id));
+  if(!missing.length) return null;
+  const item = missing[rnd(0, missing.length-1)];
+  pickPool.add(item.id);
+  return item;
+}
+function bossWinRewards(boss){
+  const g = rnd(boss.goldMin, boss.goldMax);
+  state.gold += g;
+
+  state.potions.s += rnd(8, 18);
+  state.potions.m += rnd(5, 12);
+  state.potions.b += rnd(2, 6);
+
+  const lvlUp = rnd(1, 3);
+  state.lvl += lvlUp;
+
+  let gotItem = null;
+  if(Math.random() < 0.60) gotItem = grantMissingRandomItem();
+
+  let slotUp = false;
+  if(Math.random() < 0.20 && equipSlots() < 10){
+    state.equipSlots = equipSlots() + 1;
+    slotUp = true;
+  }
+
+  state.hpMax = calcHpMax();
+  state.hp = clamp(state.hp + rnd(20, 60), 0, calcHpCap());
+
+  const itemTxt = gotItem ? ` + ITEM: ${gotItem.name}` : "";
+  const slotTxt = slotUp ? ` +1 ESPAI! (${equipSlots()}/10)` : "";
+  logEvent("🏆", `BOSS CAIGUT!! +${g}🪙, +pocions, +${lvlUp} nivells${itemTxt}${slotTxt}`);
+}
+
+/* ====== COMBAT ====== */
+function spawnEnemy(){
+  if(gameEnded) return;
+
+  if(state.place === "Final Boss"){
+    const base = BOSS_ENEMIES[rnd(0, BOSS_ENEMIES.length-1)];
+    const scale = 1 + (state.lvl * 0.03);
+    const hpMax = Math.floor(base.hp * scale) + rnd(0, 120);
+
+    const dMin = Math.floor(base.dmg[0] * (1 + state.lvl*0.015));
+    const dMax = Math.floor(base.dmg[1] * (1 + state.lvl*0.015));
+
+    const goldMin = Math.floor(base.gold[0] * (1 + state.lvl*0.02));
+    const goldMax = Math.floor(base.gold[1] * (1 + state.lvl*0.02));
+
+    state.enemy = {
+      boss:true,
+      multiHit: !!base.multiHit,
+      name: base.name,
+      hpMax, hp: hpMax,
+      dmgMin:dMin, dmgMax:dMax,
+      goldMin, goldMax
+    };
+    state.guardOn = false;
+    logEvent("🔥", `Apareix el BOSS: ${state.enemy.name} (vida ${hpMax})`);
+    render();
+    return;
+  }
+
+  if(state.place !== "Bosc"){
+    logEvent("🗺️","Aquí no hi ha combats.");
+    return;
+  }
+
+  const e = ENEMIES[rnd(0, ENEMIES.length-1)];
+  state.enemy = {
+    boss:false,
+    name:e.name,
+    hpMax:e.hp + Math.floor(state.lvl*2),
+    hp:e.hp + Math.floor(state.lvl*2),
+    dmgMin:e.dmg[0] + Math.floor(state.lvl*0.6),
+    dmgMax:e.dmg[1] + Math.floor(state.lvl*0.6),
+    goldMin:e.gold[0] + Math.floor(state.lvl*0.9),
+    goldMax:e.gold[1] + Math.floor(state.lvl*0.9)
+  };
+  state.guardOn = false;
+}
+
+function enemyAttack(){
+  if(!enemyAlive()) return;
+
+  const hits = (state.enemy.boss && state.enemy.multiHit && Math.random() < 0.35) ? 2 : 1;
+
+  for(let i=0;i<hits;i++){
+    let dmg = rnd(state.enemy.dmgMin, state.enemy.dmgMax);
+    const def = calcDef();
+    dmg = Math.max(1, dmg - def);
+    if(state.guardOn) dmg = Math.ceil(dmg * 0.55);
+
+    const dodge = dodgeChance();
+    if(Math.random() < dodge){
+      logEvent("💨", hits===2 ? "Esquives un dels cops del boss!" : "Esquives l’atac!");
+      continue;
+    }
+
+    state.hp = clamp(state.hp - dmg, 0, calcHpCap());
+    logEvent(state.enemy.boss ? "💀" : "💥", `${state.enemy.name} et fa -${dmg} vida.`);
+    state.guardOn = false;
+
+    if(state.hp <= 0){ return handleDeath(); }
+  }
+}
+
+function handleDeath(){
+  gameEnded = true;
+  if(uiInterval) clearInterval(uiInterval);
+
+  const h = HOUSES[state.houseTier] || HOUSES[0];
+  const goldLoss = Math.floor(state.gold * (h.goldLoss ?? 0.25));
+  const beforeGold = state.gold;
+  state.gold = Math.max(0, state.gold - goldLoss);
+
+  let potLoss = 0;
+  const chance = (h.potionLoss ?? 1.0);
+  if(totalPotions() > 0 && Math.random() < chance){
+    if(state.potions.ul>0){ state.potions.ul--; potLoss=1; }
+    else if(state.potions.xl>0){ state.potions.xl--; potLoss=1; }
+    else if(state.potions.b>0){ state.potions.b--; potLoss=1; }
+    else if(state.potions.m>0){ state.potions.m--; potLoss=1; }
+    else if(state.potions.s>0){ state.potions.s--; potLoss=1; }
+  }
+
+  $("deathPlace").textContent = state.place;
+  $("deathLvl").textContent = state.lvl;
+  $("deathGold").textContent = `${beforeGold} → ${state.gold}`;
+  $("deathPenalty").textContent = `-${goldLoss}🪙` + (potLoss ? " + 1 poció" : "");
+
+  $("deathOverlay").style.display = "flex";
+  $("dangerOverlay").style.opacity = "0.78";
+
+  disableAllControls();
+}
+
+/* ====== UI UPDATE ====== */
+function updateEducationUI(){
+  const next = eduNextStep();
+  const left = eduCdLeft();
+
+  $("eduNow").textContent = eduCurrentName();
+  $("eduNext").textContent = next ? `${next.name} (${next.price}🪙, +${next.gain}🧠)` : "Completat ✅";
+  $("eduCd").textContent = left>0 ? msToText(left) : "—";
+
+  const btn = $("eduEnroll");
+  const hint = $("eduHint");
+
+  if(state.place !== "Educació"){
+    btn.disabled = true;
+    hint.textContent = "Ves a Educació per estudiar.";
+    return;
+  }
+
+  if(left > 0){
+    btn.disabled = true;
+    btn.textContent = `⏳ Estudiant (${msToText(left)})`;
+    hint.textContent = "Quan acabi, et donarà coneixement automàticament.";
+    return;
+  }
+
+  if(!next){
+    btn.disabled = true;
+    btn.textContent = "👑 Tot completat";
+    hint.textContent = "Tens màster completat. 🧠✨";
+    return;
+  }
+
+  btn.disabled = (state.gold < next.price);
+  btn.textContent = `📚 Entrar a ${next.name} (${next.price}🪙)`;
+  hint.textContent = btn.disabled ? `Et falta or per entrar a ${next.name}.` : `Pagues ${next.price}🪙 i en 5 min guanyes +${next.gain}🧠.`;
+}
+
+function updateJobsUI(){
+  const kMax = Number(state.knowledgeMax||500);
+  $("jobKInfo").textContent = `${state.knowledge}/${kMax}🧠`;
+
+  const left = jobCdLeft();
+  $("jobCdInfo").textContent = left>0 ? msToText(left) : "—";
+
+  const grid = $("jobGrid");
+  grid.innerHTML = "";
+
+  const here = (state.place === "Treballs");
+  $("jobHint").textContent = here ? "Tria una feina. Com més coneixement, més recompensa 😈" : "Has d’estar a “Treballs” per currar.";
+
+  JOBS.forEach(job=>{
+    const okK = canDoJob(job);
+    const can = here && okK && left===0;
+
+    const rewardTxtParts = [];
+    rewardTxtParts.push(`🪙 ${job.reward.gold[0]}–${job.reward.gold[1]}`);
+    if(job.reward.potS) rewardTxtParts.push(`🧪S ${job.reward.potS[0]}–${job.reward.potS[1]}`);
+    if(job.reward.potM) rewardTxtParts.push(`🧪M ${job.reward.potM[0]}–${job.reward.potM[1]}`);
+    if(job.reward.potB) rewardTxtParts.push(`🧪B ${job.reward.potB[0]}–${job.reward.potB[1]}`);
+    const rewardTxt = rewardTxtParts.join(" · ");
+
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <div>
+        <b>${job.icon} ${job.name}</b>
+        <div class="desc">${job.desc}</div>
+        <div class="desc"><b>Requereix:</b> ${job.reqK}🧠</div>
+        <div class="desc"><b>Recompensa:</b> ${rewardTxt}</div>
+      </div>
+      <div class="actions">
+        <button class="btn ${can ? "good" : ""}" ${can ? "" : "disabled"}>${okK ? (left>0 ? "⏳ Cooldown" : "Treballar") : "Bloquejat"}</button>
+      </div>
+    `;
+    div.querySelector("button").onclick = ()=>doJob(job.id);
+    grid.appendChild(div);
+  });
+}
+
+function updateShopUI(){
+  $("shopRotateInfo").textContent = `⏳ Canvi en: ${msToText(shopNextRotationLeft())}`;
+}
+
+function renderStats(){
+  tryFinishEducation();
+
+  state.hpMax = calcHpMax();
+  state.hp = clamp(state.hp, 0, calcHpCap());
+
+  const atk = calcAtk();
+  const def = calcDef();
+
+  $("placeChip").textContent = state.place;
+  $("lvlChip").textContent = state.lvl;
+  $("hpChip").textContent = `${state.hp}/${state.hpMax}`;
+
+  const kMax = Number(state.knowledgeMax||500);
+  $("kChip").textContent = `${state.knowledge}/${kMax}`;
+
+  $("goldChip").textContent = state.gold;
+  $("houseChip").textContent = HOUSES[state.houseTier]?.name || "Cap";
+
+  $("spawnTitle").textContent = `${spawnPlace()==="Casa"?"🏠 Casa":"🛖 Cabaneta"} (Spawn)`;
+
+  $("hpTxt").textContent = `${state.hp}/${state.hpMax}`;
+  $("kTxt").textContent = `${state.knowledge}/${kMax}`;
+  $("atkTxt").textContent = `${atk.min}–${atk.max}`;
+  $("defTxt").textContent = `${def}`;
+  $("goldTxt").textContent = `${state.gold}`;
+
+  $("hpFill").style.width = `${Math.round((state.hp/state.hpMax)*100)}%`;
+  $("kFill").style.width  = `${Math.round((state.knowledge/kMax)*100)}%`;
+  $("atkFill").style.width = `${clamp(Math.round(((atk.max)/(120))*100), 5, 100)}%`;
+  $("defFill").style.width = `${clamp(Math.round((def/40)*100), 0, 100)}%`;
+  $("goldFill").style.width = `${clamp(Math.round((state.gold/6000)*100), 0, 100)}%`;
+
+  if(state.place === "Final Boss"){
+    $("zoneTitle").textContent = "🔥 Final Boss";
+    $("zoneHint").textContent = "⚠️ Dificultat alta. Recompensa enorme si guanyes!";
+  }else if(state.place === "Educació"){
+    $("zoneTitle").textContent = "🎓 Educació";
+    $("zoneHint").textContent = "Aquí no hi ha combats: només estudiar 🧠";
+  }else if(state.place === "Treballs"){
+    $("zoneTitle").textContent = "💼 Treballs";
+    $("zoneHint").textContent = "Aquí es curra segons el teu coneixement 🧠";
+  }else{
+    $("zoneTitle").textContent = "🌲 Bosc";
+    $("zoneHint").textContent = "Minar: cooldown 2 min, recompensa ~50+ 🪙";
+  }
+
+  if(enemyAlive()){
+    $("enemyName").textContent = state.enemy.name + (state.enemy.boss ? " (BOSS)" : "");
+    $("eHpTxt").textContent = `${state.enemy.hp}/${state.enemy.hpMax}`;
+    $("eHpFill").style.width = `${Math.round((state.enemy.hp/state.enemy.hpMax)*100)}%`;
+  }else{
+    $("enemyName").textContent = "Cap enemic";
+    $("eHpTxt").textContent = "—";
+    $("eHpFill").style.width = "0%";
+  }
+
+  updateWorkUI();
+  updateMineUI();
+  updateDangerOverlay();
+  updateEducationUI();
+  updateJobsUI();
+  updateShopUI();
+}
+
+function renderLists(){
+  const ws = getWeapons();
+  const as = getArmors();
+  const ps = getPets();
+
+  $("eqWeapon").textContent = ws.length ? ws.map(x=>x.name).join(" · ") : "Cap";
+  const wMin = ws.reduce((s,x)=>s+(x?.stats?.min||0),0);
+  const wMax = ws.reduce((s,x)=>s+(x?.stats?.max||0),0);
+  const wCrit = ws.reduce((s,x)=>s+(x?.stats?.crit||0),0);
+  $("eqWeaponStats").textContent = ws.length ? `+${wMin} min +${wMax} max${wCrit?` · +${Math.round(wCrit*100)}% crític`:""}` : "—";
+
+  $("eqArmor").textContent = as.length ? as.map(x=>x.name).join(" · ") : "Cap";
+  const aDef = as.reduce((s,x)=>s+(x?.stats?.def||0),0);
+  const aHp  = as.reduce((s,x)=>s+(x?.stats?.hpMax||0),0);
+  $("eqArmorStats").textContent = as.length ? `+${aDef} def${aHp?` · +${aHp} vida max`:""}` : "—";
+
+  $("eqPet").textContent = ps.length ? ps.map(x=>x.name).join(" · ") : "Cap";
+  const pCrit = ps.reduce((s,x)=>s+(x?.bonus?.crit||0),0);
+  const pDdg  = ps.reduce((s,x)=>s+(x?.bonus?.dodge||0),0);
+  const pDmg  = ps.reduce((s,x)=>s+(x?.bonus?.dmg||0),0);
+  const pHp   = ps.reduce((s,x)=>s+(x?.bonus?.hpMax||0),0);
+  $("eqPetStats").textContent = ps.length
+    ? `${pCrit?`+${Math.round(pCrit*100)}% crític · `:""}${pDdg?`+${Math.round(pDdg*100)}% esquiva · `:""}${pDmg?`+${Math.round(pDmg*100)}% dany · `:""}${pHp?`+${pHp} vida max`:""}`.replace(/ · $/,"")
+    : "—";
+
+  const s = equipSlots();
+  $("slotInfo").textContent = `${s}/10`;
+  const cost = nextEquipSlotCost();
+  const b = $("buyEquipSlot");
+  const hint = $("slotHint");
+  if(cost===null){
+    b.disabled = true;
+    b.textContent = "👑 Màxim d'espais";
+    hint.textContent = "Ja tens 10 espais 😎";
+  }else{
+    b.disabled = (state.gold < cost);
+    b.textContent = `➕ Comprar espai (${cost}🪙)`;
+    hint.textContent = b.disabled ? "Et falta or per comprar el següent espai." : "Et deixa equipar més coses.";
+  }
+
+  $("potList").textContent =
+    `Petites: ${state.potions.s} · Mitjanes: ${state.potions.m} · Grans: ${state.potions.b} · XL: ${state.potions.xl} · Ultra: ${state.potions.ul}`;
+
+  const ow = state.owned.weapons.map(id=>SHOP_ALL.find(x=>x.id===id)?.name).filter(Boolean);
+  const oa = state.owned.armors.map(id=>SHOP_ALL.find(x=>x.id===id)?.name).filter(Boolean);
+  const op = state.owned.pets.map(id=>PETS.find(x=>x.id===id)?.name).filter(Boolean);
+  $("ownedList").textContent =
+    `Armes: ${ow.length?ow.slice(0,25).join(", "):"—"}${ow.length>25?" …":""}\n` +
+    `Armadures: ${oa.length?oa.slice(0,25).join(", "):"—"}${oa.length>25?" …":""}\n` +
+    `Mascotes: ${op.length?op.join(", "):"—"}`;
+
+  // shop grid (5)
+  const sg = $("shopGrid");
+  sg.innerHTML = "";
+  const active = getActiveShopItems();
+
+  active.forEach(item=>{
+    const owned = isOwned(item);
+    const can = canBuyShop();
+    const isEq =
+      (item.type==="weapon" && (state.equipped?.weapons||[]).includes(item.id)) ||
+      (item.type==="armor"  && (state.equipped?.armors||[]).includes(item.id));
+
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <div>
+        <b>${item.icon} ${item.name}</b>
+        <div class="desc">${item.desc}</div>
+      </div>
+      <div class="actions">
+        <div class="price">${item.price}🪙</div>
+        <button class="btn ${item.type==="potion"?"good":"primary"}" ${can?"":"disabled"}>Comprar</button>
+        ${item.type!=="potion"
+          ? `<button class="btn" ${owned && !isEq
+              && ((item.type==="weapon" && (state.equipped?.weapons||[]).length < equipSlots())
+              || (item.type==="armor" && (state.equipped?.armors||[]).length < equipSlots()))
+              ? "" : "disabled"}>${isEq?"Equipat":"Equipar"}</button>`
+          : ``}
+      </div>
+    `;
+    const btns = div.querySelectorAll("button");
+    btns[0].onclick = ()=>buyItem(item.id);
+    if(item.type!=="potion") btns[1].onclick = ()=>equipItem(item.id);
+    sg.appendChild(div);
+  });
+
+  // pets
+  const pg = $("petGrid");
+  pg.innerHTML = "";
+  PETS.forEach(pet=>{
+    const owned = state.owned.pets.includes(pet.id);
+    const eq = (state.equipped?.pets||[]).includes(pet.id);
+    const canP = canBuyPet();
+
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <div>
+        <b>${pet.icon} ${pet.name}</b>
+        <div class="desc">${pet.desc}</div>
+      </div>
+      <div class="actions">
+        <div class="price">${pet.price}🪙</div>
+        <button class="btn good" ${(!canP || owned)?"disabled":""}>Comprar</button>
+        <button class="btn" ${(owned && !eq && (state.equipped?.pets||[]).length < equipSlots())?"":"disabled"}>${eq?"Equipada":"Equipar"}</button>
+      </div>
+    `;
+    const btns = div.querySelectorAll("button");
+    btns[0].onclick = ()=>buyPet(pet);
+    btns[1].onclick = ()=>equipPet(pet);
+    pg.appendChild(div);
+  });
+
+  // houses info
+  const h = HOUSES[state.houseTier] || HOUSES[0];
+  $("houseNow").textContent = `${h.icon} ${h.name}`;
+  $("housePerks").textContent = `Descans: +${h.rest} · Respawn: ${Math.round((h.respawnHp||0.6)*100)}% vida`;
+  const nextH = hasMaxHouse() ? null : HOUSES[state.houseTier+1];
+  $("nextHouseInfo").textContent = nextH ? `Següent: ${nextH.icon} ${nextH.name} · Preu ${nextH.price}🪙` : "Ja tens la millor casa! 👑";
+}
+
+function render(){
+  renderStats();
+  renderLists();
+}
+
+/* ====== SAVE/LOAD/RESET ====== */
+const SAVE_KEY = "martinakus_mini_rpg_v3";
+$("saveLocal").onclick = ()=>{
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); logEvent("💾","Partida guardada!"); }
+  catch{ logEvent("❌","No he pogut guardar 😵"); }
+};
+$("loadLocal").onclick = ()=>{
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw){ logEvent("📂","No hi ha cap save."); return; }
+    const obj = JSON.parse(raw);
+    Object.assign(state, obj);
+    if(state.equipped && !state.equipped.weapons){
+      const old = state.equipped;
+      state.equipped = { weapons: old.weapon?[old.weapon]:[], armors: old.armor?[old.armor]:[], pets: old.pet?[old.pet]:[] };
+    }
+    logEvent("📂","Partida carregada!");
+    render();
+  }catch{ logEvent("❌","Save corrupte 😵"); }
+};
+$("reset").onclick = ()=>{
+  if(!confirm("Segur que vols reiniciar la partida? (esborra el save)")) return;
+  localStorage.removeItem(SAVE_KEY);
+  localStorage.removeItem(WORK_KEY);
+  Object.assign(state, DEFAULT_STATE());
+  state.place = spawnPlace();
+  logEvent("🔄","Reinicies la partida!");
+  render();
+};
+
+/* ====== START MENU ====== */
+function startGame(){
+  if(gameStarted) return;
+  gameStarted = true;
+
+  $("startOverlay").classList.add("hidden");
+  $("gameApp").classList.remove("hidden");
+
+  state.place = spawnPlace();
+  lastShopWindow = shopWindowIndex();
+
+  logEvent("🚀","Comença la partida en dificultat Normal!");
+  render();
+
+  if(uiInterval) clearInterval(uiInterval);
+  uiInterval = setInterval(()=>{
+    if(gameEnded) return;
+
+    renderStats();
+
+    // 🔥 rotació tenda sense reiniciar
+    const w = shopWindowIndex();
+    if(w !== lastShopWindow){
+      lastShopWindow = w;
+      renderLists();
+    }
+  }, 1000);
+}
+
+$("btnEasy").onclick = ()=>{ $("startHint").innerHTML = "🟡 <b>Fàcil</b> estarà disponible <b>pròximament</b> 😅"; };
+$("btnHard").onclick = ()=>{ $("startHint").innerHTML = "🔴 <b>Difícil</b> estarà disponible <b>pròximament</b> 😈"; };
+$("btnNormal").onclick = ()=>{ $("startHint").innerHTML = "🔵 Entrant a <b>Normal</b>..."; setTimeout(startGame, 120); };
+
+/* ====== NAV BUTTONS ====== */
+$("goSpawn").onclick = ()=>{ go(spawnPlace()); openTab("inventory"); };
+$("goTown").onclick  = ()=>{ go("Ciutat"); openTab("inventory"); };
+$("goForest").onclick= ()=>{ go("Bosc"); openTab("inventory"); };
+$("goShop").onclick  = ()=>{ go("Tenda"); openTab("shop"); };
+$("goHouses").onclick= ()=>{ go("Cases"); openTab("houses"); };
+$("goPets").onclick  = ()=>{ openTab("pets"); logEvent("🐾","Obres el menú de mascotes."); render(); };
+$("goBoss").onclick  = ()=>{ go("Final Boss"); openTab("inventory"); logEvent("🔥","Zona Final Boss 😈"); };
+$("goEdu").onclick   = ()=>{ go("Educació"); openTab("edu"); logEvent("🎓","Benvingut a Educació!"); };
+$("goJobs").onclick  = ()=>{ go("Treballs"); openTab("jobs"); logEvent("💼","Benvingut a Treballs!"); };
+
+document.querySelectorAll(".tab").forEach(t=> t.addEventListener("click", ()=>openTab(t.dataset.tab)));
+
+/* ====== SPAWN ACTIONS ====== */
+$("spawnRest").onclick = ()=>{
+  if(gameEnded) return;
+  const here = (state.place==="Cabaneta" || state.place==="Casa");
+  if(!here){ logEvent("🏠","Ves al spawn per descansar."); return; }
+  const heal = (state.place === "Casa") ? 55 : 35;
+  state.hp = clamp(state.hp + heal, 0, calcHpCap());
+  logEvent("😴", `Descanses a ${state.place} i et cures +${heal} vida.`);
+  render();
+};
+$("spawnWork").onclick = ()=>{
+  if(gameEnded) return;
+  const here = (state.place==="Cabaneta" || state.place==="Casa");
+  if(!here){ logEvent("🏠","Ves al spawn per treballar."); return; }
+
+  const s = workStatus();
+  if(!s.ok){
+    if(s.inCd) logEvent("⏳", `Espera ${msToText(s.cdLeft)}.`);
+    else logEvent("🚫", `Has treballat ${WORK_MAX} cops. Espera ${msToText(s.windowLeft)}.`);
+    return;
+  }
+
+  const base = (state.place==="Casa") ? 16 : 10;
+  const g = rnd(base, base+10) + Math.floor(state.lvl*1.5);
+  state.gold += g;
+
+  s.w.times.push(now());
+  s.w.cooldownUntil = now() + WORK_COOLDOWN_MS;
+  cleanWork(s.w);
+  saveWork(s.w);
+
+  logEvent("🪙", `Treballes a ${state.place} i guanyes +${g} or.`);
+  render();
+};
+
+/* ====== EDUCATION ACTION ====== */
+$("eduEnroll").onclick = ()=>{
+  if(gameEnded) return;
+  if(state.place !== "Educació"){ logEvent("🎓","Has d’estar a Educació per estudiar."); return; }
+  if(eduCdLeft() > 0){ logEvent("⏳", `Encara estudies! Falta: ${msToText(eduCdLeft())}`); return; }
+  tryFinishEducation();
+
+  const next = eduNextStep();
+  if(!next){ logEvent("👑","Ja tens el MÀSTER completat! 🧠✨"); render(); return; }
+  if(state.gold < next.price){ logEvent("😅", `Et falten or. Preu: ${next.price}🪙`); return; }
+
+  state.gold -= next.price;
+  state.eduStudyingUntil = now() + EDU_CD_MS;
+  state.eduPendingGain = next.gain;
+
+  logEvent("📚", `Entres a ${next.name}. Espera 5 minuts 😈`);
+  render();
+};
+
+/* ====== JOB BUTTONS (de la llista) ja van amb onclick a updateJobsUI ====== */
+
+/* ====== HOUSES ACTIONS ====== */
+$("buyHouse").onclick = ()=>{
+  if(gameEnded) return;
+  if(state.place !== "Cases"){ logEvent("🏠","Has d’estar a ‘Cases’ per comprar/millorar."); return; }
+  if(hasMaxHouse()){ logEvent("👑","Ja tens el PALAU (màxim)!!"); return; }
+
+  const next = HOUSES[state.houseTier+1];
+  if(state.gold < next.price){ logEvent("😅", `Et falten or. Preu: ${next.price}🪙`); return; }
+
+  state.gold -= next.price;
+  state.houseTier += 1;
+
+  logEvent(next.icon, `Millores a: ${next.name}! Ara el spawn és CASA 🏠`);
+  go(spawnPlace());
+  openTab("inventory");
+  render();
+};
+$("restHouseMenu").onclick = ()=>{
+  if(gameEnded) return;
+  if(state.place !== "Cases"){ logEvent("🏠","Has d’estar a ‘Cases’ per descansar."); return; }
+  if(state.houseTier === 0){ logEvent("🏚️","No tens cap casa. Compra’n una!"); return; }
+
+  const h = HOUSES[state.houseTier];
+  const heal = h.rest || 40;
+  state.hp = clamp(state.hp + heal, 0, calcHpCap());
+  logEvent("😴", `Descanses i et cures +${heal} vida.`);
+  render();
+};
+
+/* ====== EQUIP SLOT BUY ====== */
+$("buyEquipSlot").onclick = ()=>{
+  if(gameEnded) return;
+  const cost = nextEquipSlotCost();
+  if(cost === null){ logEvent("👑","Ja tens 10 espais! 😎"); return; }
+  if(state.gold < cost){ logEvent("😅", `Et falten or. Preu: ${cost}🪙`); return; }
+  state.gold -= cost;
+  state.equipSlots = equipSlots() + 1;
+  logEvent("➕", `Compres un espai nou! Ara tens ${state.equipSlots}/10 espais.`);
+  render();
+};
+
+/* ====== COMBAT BUTTONS ====== */
+$("actExplore").onclick = ()=>{
+  if(gameEnded) return;
+  if(state.place !== "Bosc" && state.place !== "Final Boss"){
+    logEvent("🗺️","Explorar? Ves al Bosc o al Final Boss.");
+    return;
+  }
+  if(enemyAlive()){ logEvent("😅","Ja tens un enemic!"); return; }
+
+  spawnEnemy();
+  if(state.enemy){
+    logEvent(state.place==="Final Boss" ? "🔥" : "👀",
+      state.place==="Final Boss" ? "Un boss s’apropa..." : `Apareix un enemic: ${state.enemy.name}!`
+    );
+  }
+  render();
+};
+
+$("actMine").onclick = ()=>{
+  if(gameEnded) return;
+  if(state.place !== "Bosc"){ logEvent("🌲","Ves al BOSC per minar."); return; }
+  if(enemyAlive()){ logEvent("😵","No pots minar amb enemic!"); return; }
+  if(mineLeft()>0){ logEvent("⏳", `Cooldown: ${msToText(mineLeft())}`); return; }
+
+  const g = 50 + rnd(0,25) + Math.floor(state.lvl*1.2);
+  state.gold += g;
+  state.mineCooldownUntil = now() + MINE_CD_MS;
+  logEvent("⛏️", `Mines i guanyes +${g} or!`);
+  render();
+};
+
+$("actAttack").onclick = ()=>{
+  if(gameEnded) return;
+  if(state.place !== "Bosc" && state.place !== "Final Boss"){ logEvent("🗺️","Atacar? Ves al Bosc o al Final Boss."); return; }
+  if(!enemyAlive()){ logEvent("😅","No hi ha enemic."); return; }
+
+  const atk = calcAtk();
+  let dmg = rnd(atk.min, atk.max);
+  dmg = Math.floor(dmg * dmgMult());
+
+  let crit = false;
+  if(Math.random() < critChance()){
+    dmg = Math.floor(dmg * 1.75);
+    crit = true;
+  }
+
+  state.enemy.hp = Math.max(0, state.enemy.hp - dmg);
+  logEvent(crit ? "💥" : "⚔️", `Fas ${crit?"CRIT ":""}${dmg} dany a ${state.enemy.name}.`);
+
+  if(state.enemy.hp <= 0){
+    if(state.enemy.boss){
+      bossWinRewards(state.enemy);
+    }else{
+      const g = rnd(state.enemy.goldMin, state.enemy.goldMax);
+      state.gold += g;
+      state.lvl += 1;
+      state.hpMax = calcHpMax();
+      state.hp = clamp(state.hp + 10, 0, calcHpCap());
+      logEvent("🏆", `Derrotes ${state.enemy.name}! +${g}🪙 i puges a nivell ${state.lvl}.`);
+    }
+    state.enemy = null;
+    state.guardOn = false;
+    render();
+    return;
+  }
+
+  enemyAttack();
+  render();
+};
+
+$("actGuard").onclick = ()=>{
+  if(gameEnded) return;
+  if(state.place !== "Bosc" && state.place !== "Final Boss"){ logEvent("🗺️","Defensar? Ves al Bosc o al Final Boss."); return; }
+  if(!enemyAlive()){ logEvent("😅","No hi ha enemic."); return; }
+  state.guardOn = true;
+  logEvent("🛡️","Et poses en guàrdia! (reducció de dany)");
+  enemyAttack();
+  render();
+};
+
+$("actSkill").onclick = ()=>{
+  if(gameEnded) return;
+  if(state.place !== "Bosc" && state.place !== "Final Boss"){ logEvent("🗺️","Habilitat? Ves al Bosc o al Final Boss."); return; }
+  if(!enemyAlive()){ logEvent("😅","No hi ha enemic."); return; }
+
+  const cdMs = (state.place === "Final Boss") ? 65*1000 : 45*1000;
+  if(now() < state.skillCd){
+    logEvent("⏳", `Habilitat en cooldown: ${msToText(state.skillCd - now())}`);
+    return;
+  }
+
+  const atk = calcAtk();
+  let dmg = Math.floor(rnd(atk.min, atk.max) * (state.place==="Final Boss" ? 1.40 : 1.45));
+  dmg = Math.floor(dmg * dmgMult());
+
+  state.enemy.hp = Math.max(0, state.enemy.hp - dmg);
+  state.skillCd = now() + cdMs;
+
+  logEvent("✨", `Habilitat! Fas ${dmg} dany a ${state.enemy.name}.`);
+
+  if(state.enemy.hp <= 0){
+    if(state.enemy.boss){
+      bossWinRewards(state.enemy);
+    }else{
+      const g = rnd(state.enemy.goldMin, state.enemy.goldMax);
+      state.gold += g;
+      state.lvl += 1;
+      state.hpMax = calcHpMax();
+      state.hp = clamp(state.hp + 12, 0, calcHpCap());
+      logEvent("🏆", `Derrotes ${state.enemy.name}! +${g}🪙 i puges a nivell ${state.lvl}.`);
+    }
+    state.enemy = null;
+    state.guardOn = false;
+    render();
+    return;
+  }
+
+  enemyAttack();
+  render();
+};
+
+$("actPotion").onclick = ()=>{
+  if(gameEnded) return;
+
+  if(state.potions.ul>0){
+    state.potions.ul--;
+    state.hp = clamp(state.hp + 200, 0, calcHpCap());
+    logEvent("🧪","Uses Elixir Ultra (+200 vida).");
+  }else if(state.potions.xl>0){
+    state.potions.xl--;
+    state.hp = clamp(state.hp + 120, 0, calcHpCap());
+    logEvent("🧪","Uses Poció XL (+120 vida).");
+  }else if(state.potions.b>0){
+    state.potions.b--;
+    state.hp = clamp(state.hp + 70, 0, calcHpCap());
+    logEvent("🧪","Uses poció GRAN (+70 vida).");
+  }else if(state.potions.m>0){
+    state.potions.m--;
+    state.hp = clamp(state.hp + 40, 0, calcHpCap());
+    logEvent("🧪","Uses poció MITJANA (+40 vida).");
+  }else if(state.potions.s>0){
+    state.potions.s--;
+    state.hp = clamp(state.hp + 20, 0, calcHpCap());
+    logEvent("🧪","Uses poció PETITA (+20 vida).");
+  }else{
+    logEvent("😅","No tens pocions!");
+  }
+  render();
+};
+
+$("actRun").onclick = ()=>{
+  if(gameEnded) return;
+
+  if(state.place === "Final Boss"){
+    if(!enemyAlive()){ logEvent("😄","No hi ha boss."); return; }
+    if(Math.random() < 0.35){
+      state.enemy = null;
+      state.guardOn = false;
+      logEvent("🏃","Fuges del Final Boss... per poc 😳");
+      render();
+    }else{
+      logEvent("💀","No pots fugir! El boss et castiga!");
+      enemyAttack();
+      render();
+    }
+    return;
+  }
+
+  if(state.place !== "Bosc"){ logEvent("🌲","Només pots fugir al Bosc."); return; }
+  if(!enemyAlive()){ logEvent("😅","No hi ha enemic."); return; }
+
+  if(Math.random() < 0.60){
+    logEvent("🏃","Fuges del combat!");
+    state.enemy = null;
+    state.guardOn = false;
+    render();
+  }else{
+    logEvent("😵","No pots fugir! L’enemic ataca!");
+    enemyAttack();
+    render();
+  }
+};
+
+/* ====== DEATH BUTTONS ====== */
+$("deathRespawn").onclick = ()=>{
+  const h = HOUSES[state.houseTier] || HOUSES[0];
+  state.hpMax = calcHpMax();
+  const newHp = Math.floor(state.hpMax * (h.respawnHp ?? 0.60));
+  state.hp = clamp(newHp, 1, calcHpCap());
+
+  state.enemy = null;
+  state.guardOn = false;
+  state.skillCd = 0;
+  state.place = spawnPlace();
+
+  $("deathOverlay").style.display = "none";
+  $("dangerOverlay").style.opacity = "0";
+  gameEnded = false;
+  enableAllControls();
+
+  // torna a arrencar el loop
+  if(uiInterval) clearInterval(uiInterval);
+  uiInterval = setInterval(()=>{
+    if(gameEnded) return;
+
+    renderStats();
+
+    const w = shopWindowIndex();
+    if(w !== lastShopWindow){
+      lastShopWindow = w;
+      renderLists();
+    }
+  }, 1000);
+
+  logEvent("🧬","Reapareixes al spawn… i continues la partida!");
+  render();
+};
+$("deathQuit").onclick = ()=>{
+  $("deathOverlay").style.display = "none";
+  $("gameApp").classList.add("hidden");
+  $("startOverlay").classList.remove("hidden");
+  $("startHint").innerHTML = "💀 Has sortit. Torna a clicar <b>Normal</b> per jugar.";
+  gameEnded = false;
+  gameStarted = false;
+  enableAllControls();
+  if(uiInterval) clearInterval(uiInterval);
+};
+
+/* ====== DEV MENU ====== */
+function openDev(){ $("devOverlay").style.display = "flex"; }
+function closeDev(){ $("devOverlay").style.display = "none"; }
+$("devClose").onclick = closeDev;
+
+let devHoldTimer = null;
+$("brandTapArea").addEventListener("pointerdown", ()=>{ devHoldTimer = setTimeout(()=> openDev(), 2000); });
+$("brandTapArea").addEventListener("pointerup", ()=>{ if(devHoldTimer) clearTimeout(devHoldTimer); devHoldTimer = null; });
+
+let devBuffer = "";
+document.addEventListener("keypress", (e)=>{
+  devBuffer += (e.key||"");
+  devBuffer = devBuffer.slice(-8);
+  if(devBuffer.toLowerCase().includes("dev")){
+    openDev();
+    devBuffer = "";
+  }
+});
+
+function godMode(){
+  state.gold = 99999;
+  state.lvl = 50;
+  state.knowledge = state.knowledgeMax;
+
+  state.owned.weapons = SHOP_ALL.filter(x=>x.type==="weapon").map(x=>x.id);
+  state.owned.armors  = SHOP_ALL.filter(x=>x.type==="armor").map(x=>x.id);
+  state.owned.pets    = PETS.map(x=>x.id);
+
+  state.equipped.weapons = state.owned.weapons.slice(0, Math.min(10, equipSlots()));
+  state.equipped.armors  = state.owned.armors.slice(0, Math.min(10, equipSlots()));
+  state.equipped.pets    = ["p_alien"];
+
+  state.potions = { s: 99, m: 99, b: 99, xl:99, ul:99 };
+  state.houseTier = HOUSES.length-1;
+  state.equipSlots = 10;
+
+  state.hpMax = calcHpMax();
+  state.hp = calcHpCap();
+
+  logEvent("🛡️","GOD MODE activat 😈");
+  render();
+}
+function healNow(){
+  state.hpMax = calcHpMax();
+  state.hp = calcHpCap();
+  logEvent("❤️","Vida al màxim!");
+  render();
+}
+function mineReset(){ state.mineCooldownUntil = 0; logEvent("⛏️","Mina reset!"); render(); }
+function workReset(){ localStorage.removeItem(WORK_KEY); logEvent("🪙","Treball spawn reset!"); render(); }
+function devReset(){
+  const ok = confirm("Segur que vols fer RESET? Esborrarà la SAVE i començaràs de 0.");
+  if(!ok) return;
+  localStorage.removeItem(SAVE_KEY);
+  localStorage.removeItem(WORK_KEY);
+  Object.assign(state, DEFAULT_STATE());
+  state.place = spawnPlace();
+  state.enemy = null;
+  state.guardOn = false;
+  state.skillCd = 0;
+  logEvent("🔄","RESET fet! Nova partida 😈");
+  render();
+}
+function spawnEnemyExact(){
+  const idx = Number($("enemySelect").value || 0);
+  const base = ENEMIES[idx] || ENEMIES[0];
+  state.place = "Bosc";
+  state.enemy = {
+    boss:false,
+    name: base.name,
+    hpMax: base.hp + Math.floor(state.lvl*2),
+    hp: base.hp + Math.floor(state.lvl*2),
+    dmgMin: base.dmg[0] + Math.floor(state.lvl*0.6),
+    dmgMax: base.dmg[1] + Math.floor(state.lvl*0.6),
+    goldMin: base.gold[0] + Math.floor(state.lvl*0.9),
+    goldMax: base.gold[1] + Math.floor(state.lvl*0.9),
+  };
+  logEvent("👾", `Spawn: ${state.enemy.name}`);
+  render();
+}
+
+document.querySelectorAll("#devOverlay [data-act]").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    const act = btn.getAttribute("data-act");
+    if(act==="god") return godMode();
+    if(act==="heal") return healNow();
+    if(act==="mineReset") return mineReset();
+    if(act==="workReset") return workReset();
+    if(act==="devReset") return devReset();
+    if(act==="spawnEnemyExact") return spawnEnemyExact();
+  });
+});
+
+/* ====== INIT ====== */
+(function init(){
+  SHOP_ALL = makeShopCatalog();
+  $("enemySelect").innerHTML = ENEMIES.map((e,i)=>`<option value="${i}">${e.name}</option>`).join("");
+
+  state.place = spawnPlace();
+  lastShopWindow = shopWindowIndex();
+
+  // no comença fins que piques NORMAL
+})();
+</script>
+</body>
+</html>
